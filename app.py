@@ -1,33 +1,49 @@
 import streamlit as st
 import tempfile
 import os
+import shutil
 
 # Title of the app
-st.title("File Upload and Download Example with Tempfile")
+st.title("File Upload and Download Example with Tempfolder")
+
+# Initialize session state
+if 'temp_dir' not in st.session_state:
+    st.session_state.temp_dir = None
+
+# Create a temporary directory
+if st.session_state.temp_dir is None:
+    st.session_state.temp_dir = tempfile.mkdtemp()
 
 # File uploader widget
-uploaded_file = st.file_uploader("Choose a file")
+uploaded_files = st.file_uploader("Choose files", accept_multiple_files=True)
 
-if uploaded_file is not None:
-    # Create a temporary file
-    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-        # Write the uploaded file content to the temporary file
-        tmp_file.write(uploaded_file.getbuffer())
-        tmp_file_path = tmp_file.name
+if uploaded_files:
+    # Save each uploaded file to the temporary directory
+    for uploaded_file in uploaded_files:
+        temp_file_path = os.path.join(st.session_state.temp_dir, uploaded_file.name)
+        with open(temp_file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
     
-    # Display the temporary file path
-    st.write("Temporary file saved at:", tmp_file_path)
-    
-    # Create a download button for the uploaded file
-    with open(tmp_file_path, "rb") as f:
-        st.download_button(
-            label="Download File",
-            data=f,
-            file_name=uploaded_file.name,
-            mime=uploaded_file.type
-        )
+    # Display the list of files
+    st.write("Files saved to temporary directory:")
+    for file_name in os.listdir(st.session_state.temp_dir):
+        st.write(file_name)
+        
+        # Create a download button for each file
+        with open(os.path.join(st.session_state.temp_dir, file_name), "rb") as f:
+            st.download_button(
+                label=f"Download {file_name}",
+                data=f,
+                file_name=file_name,
+                mime="application/octet-stream"
+            )
 
-    # Optionally, you can delete the temporary file if no longer needed
-    os.remove(tmp_file_path)
-
-# To run this app, save this code in a file named app.py and run `streamlit run app.py` in your terminal.
+# Reset button
+if st.button("Reset"):
+    # Remove the temporary directory and its contents
+    if st.session_state.temp_dir and os.path.exists(st.session_state.temp_dir):
+        shutil.rmtree(st.session_state.temp_dir)
+    # Recreate the temporary directory
+    st.session_state.temp_dir = tempfile.mkdtemp()
+    # Rerun the script to reset the page
+    st.experimental_rerun()
