@@ -7,7 +7,7 @@ import tempfile
 import shutil
 
 # Set API key from environment variable
-together_api_key = st.secrets["general"]["togetherai_api_key"]
+together_api_key = st.secrets["togetherai_api_key"]
 
 # Configure the embedding model
 Settings.embed_model = TogetherEmbedding(
