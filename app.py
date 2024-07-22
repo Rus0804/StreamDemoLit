@@ -5,12 +5,12 @@ from llama_index.embeddings.together import TogetherEmbedding
 from llama_index.core import Settings, VectorStoreIndex, SimpleDirectoryReader
 
 # Set API key from environment variable
-os.environ["TOGETHER_API_KEY"] = "dc4921bdc25d60750f8610d2f7212a8c26b6b8949450d31387fba18ee42a0b07"
+together_api_key = st.secrets["general"]["together_api_key"]
 
 # Configure the embedding model
 Settings.embed_model = TogetherEmbedding(
     model_name="togethercomputer/m2-bert-80M-8k-retrieval",
-    api_key=os.environ["TOGETHER_API_KEY"]
+    api_key=together_api_key
 )
 
 # Configure the LLM model
