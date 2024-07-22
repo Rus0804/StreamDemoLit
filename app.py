@@ -1,20 +1,38 @@
 import streamlit as st
-import tempfile
 import os
-import shutil
+from llama_index.llms.together import TogetherLLM
+from llama_index.embeddings.together import TogetherEmbedding
+from llama_index.core import Settings, VectorStoreIndex, SimpleDirectoryReader
+
+# Set API key from environment variable
+os.environ["TOGETHER_API_KEY"] = "dc4921bdc25d60750f8610d2f7212a8c26b6b8949450d31387fba18ee42a0b07"
+
+# Configure the embedding model
+Settings.embed_model = TogetherEmbedding(
+    model_name="togethercomputer/m2-bert-80M-8k-retrieval",
+    api_key=os.environ["TOGETHER_API_KEY"]
+)
+
+# Configure the LLM model
+model = 'mistralai/Mixtral-8x7B-Instruct-v0.1'
+
+Settings.llm = TogetherLLM(
+    model,
+    temperature=0.3,
+    max_tokens=512,
+    top_p=0.7,
+    top_k=50,
+    is_chat_model=False,
+)
 
 # Title of the app
-st.title("File Upload and Download Example with Tempfolder")
+st.title("File Upload and Query Example")
 
-# Initialize session state
+# Create a temporary directory for uploaded files
 if 'temp_dir' not in st.session_state:
-    st.session_state.temp_dir = None
-
-# Create a temporary directory
-if st.session_state.temp_dir is None:
     st.session_state.temp_dir = tempfile.mkdtemp()
 
-# File uploader widget
+# File uploader widget for multiple files
 uploaded_files = st.file_uploader("Choose files", accept_multiple_files=True)
 
 if uploaded_files:
@@ -37,6 +55,18 @@ if uploaded_files:
                 file_name=file_name,
                 mime="application/octet-stream"
             )
+
+    # Load documents and create an index
+    documents = SimpleDirectoryReader(st.session_state.temp_dir).load_data()
+    index = VectorStoreIndex.from_documents(documents)
+    query_engine = index.as_query_engine()
+
+    # Query input
+    query = st.text_input("Enter your query:")
+    if query:
+        response = query_engine.query(query)
+        st.write("Response:")
+        st.write(response)
 
 # Reset button
 if st.button("Reset"):
