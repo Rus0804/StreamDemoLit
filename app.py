@@ -3,6 +3,8 @@ import os
 from llama_index.llms.together import TogetherLLM
 from llama_index.embeddings.together import TogetherEmbedding
 from llama_index.core import Settings, VectorStoreIndex, SimpleDirectoryReader
+import tempfile
+import shutil
 
 # Set API key from environment variable
 together_api_key = st.secrets["general"]["together_api_key"]
